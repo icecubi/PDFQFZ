@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using iTextSharp.text;
 using iTextSharp.text.exceptions;
 using Org.BouncyCastle.Crypto.Generators;
+using PDFQFZ.Library;
+using System.Text;
 
 namespace PDFQFZ
 {
@@ -24,11 +26,11 @@ namespace PDFQFZ
         DataTable dtPos = new DataTable();//PDF各文件印章位置表
         DataTable dtYz = new DataTable();//PDF列表
         string sourcePath = "",outputPath = "",imgPath = "",previewPath = "",signText = "", password="",pdfpassword="";
-        int wjType = 1, qfzType = 0, yzType = 0, djType = 0, qmType = 0, wzType = 3, qbflag = 0, size = 40, rotation = 0, opacity = 100, wz = 50, yzr = 10, maximg = 250, maxfgs = 20;
+        int wjType = 1, qfzType = 0, yzType = 0, djType = 0, qmType = 0, wzType = 3, yzIndex = -1, qbflag = 0, size = 40, rotation = 0, opacity = 100, wz = 50, yzr = 30, maximg = 500, maxfgs = 20;
         Bitmap imgYz = null;
         X509Certificate2 cert = null;//证书
         float xzbl = 1f;
-
+        private string strIniFilePath = $@"{Application.StartupPath}\config.ini";//获取INI文件路径
 
 
         System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)//把DLL打包到EXE需要用到
@@ -40,18 +42,67 @@ namespace PDFQFZ
             byte[] bytes = (byte[])rm.GetObject(dllName);
             return System.Reflection.Assembly.Load(bytes);
         }
-        public Form1()
+        public Form1(string[] args)
         {
             //在InitializeComponent()之前调用
 
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             InitializeComponent();
+            // 在这里处理命令行参数
+            if (args.Length > 0)
+            {
+                // 根据参数执行相应的逻辑
+                sourcePath = string.Join(",", args); ;
+                outputPath = System.IO.Path.GetDirectoryName(args[0]);
+            }
         }
 
 
         //程序加载
         private void Form1_Load(object sender, EventArgs e)
         {
+            if (File.Exists(strIniFilePath))//读取时先要判读INI文件是否存在
+            {
+                IniFileHelper iniFileHelper = new IniFileHelper(strIniFilePath);
+                string section = "config";
+                string WjType = iniFileHelper.ContentValue(section, "wjType");//文件类型
+                string QfzType = iniFileHelper.ContentValue(section, "qfzType");//骑缝章类型
+                string YzType = iniFileHelper.ContentValue(section, "yzType");//印章类型
+                string DjType = iniFileHelper.ContentValue(section, "djType");//叠加类型
+                string QmType = iniFileHelper.ContentValue(section, "qmType");//签名类型
+                string WzType = iniFileHelper.ContentValue(section, "wzType");//骑缝章位置类型
+                string Qbflag = iniFileHelper.ContentValue(section, "qbflag");//是否切边标记
+                string Size = iniFileHelper.ContentValue(section, "size");//印章尺寸
+                string Rotation = iniFileHelper.ContentValue(section, "rotation");//旋转角度
+                string Opacity = iniFileHelper.ContentValue(section, "opacity");//不透明度
+                string Wz = iniFileHelper.ContentValue(section, "wz");//骑缝章位置
+                string Maxfgs = iniFileHelper.ContentValue(section, "maxfgs");//骑缝章最大分割数
+                string YzIndex = iniFileHelper.ContentValue(section, "yzIndex");//选择的印章索引
+                signText = iniFileHelper.ContentValue(section, "signText");//签名
+                wjType = Int32.Parse(WjType);
+                qfzType = Int32.Parse(QfzType);
+                yzType = Int32.Parse(YzType);
+                djType = Int32.Parse(DjType);
+                qmType = Int32.Parse(QmType);
+                wzType = Int32.Parse(WzType);
+                qbflag = Int32.Parse(Qbflag);
+                size = Int32.Parse(Size);
+                rotation = Int32.Parse(Rotation);
+                opacity = Int32.Parse(Opacity);
+                wz = Int32.Parse(Wz);
+                maxfgs = Int32.Parse(Maxfgs);
+                yzIndex = Int32.Parse(YzIndex);
+            }
+            fw = this.Width;
+            fh = this.Height;
+            if (yzType != 0 || qfzType == 4)
+            {
+                this.Size = new Size(fw + 517, fh);
+            }
+            else
+            {
+                this.Size = new Size(fw, fh);
+            }
             comboType.SelectedIndex = wjType;
             comboQfz.SelectedIndex = qfzType;
             comboYz.SelectedIndex = yzType;
@@ -59,8 +110,61 @@ namespace PDFQFZ
             comboQmtype.SelectedIndex = qmType;
             comboBoxWZ.SelectedIndex = wzType;
             comboBoxQB.SelectedIndex = qbflag;
-            fw = this.Width;
-            fh = this.Height;
+            textCC.Text = size.ToString();
+            textRotation.Text = rotation.ToString();
+            textOpacity.Text = opacity.ToString();
+            textWzbl.Text = wz.ToString();
+            textMaxFgs.Text = maxfgs.ToString();
+            textname.Text = signText;
+            if (qmType == 0)
+            {
+                labelname.Text = "签名";
+                textname.Text = "";
+                textpass.Text = "";
+                textname.ReadOnly = true;
+                textpass.ReadOnly = true;
+            }
+            else if (qmType == 1)
+            {
+
+                textpass.Text = "";
+                if (!File.Exists(certDefaultPath))
+                {
+                    labelname.Text = "签名";
+                    textname.Text = "";
+                    textname.ReadOnly = false;
+                }
+                else
+                {
+                    labelname.Text = "证书";
+                    textname.Text = certDefaultPath;
+                    textname.ReadOnly = true;
+                }
+
+                textpass.ReadOnly = false;
+            }
+            else
+            {
+                labelname.Text = "证书";
+                textname.Text = "";
+                textpass.Text = "";
+                textname.ReadOnly = true;
+                textpass.ReadOnly = false;
+
+                OpenFileDialog file = new OpenFileDialog();
+                file.Filter = "证书文件|*.pfx";
+                if (file.ShowDialog() == DialogResult.OK)
+                {
+                    textname.Text = file.FileName;
+                }
+                else
+                {
+                    comboQmtype.SelectedIndex = 0;
+                    labelname.Text = "签名";
+                    textname.ReadOnly = true;
+                    textpass.ReadOnly = true;
+                }
+            }
             dtYz.Columns.Add("Name", typeof(string));
             dtYz.Columns.Add("Value", typeof(string));
             comboBoxYz.DisplayMember = "Name";
@@ -68,6 +172,14 @@ namespace PDFQFZ
             comboBoxYz.DataSource = dtYz;
             if (!File.Exists(yzLog))
             {
+                yzIndex = -1;
+                if (File.Exists(strIniFilePath))
+                {
+                    //为了避免误删印章记录,然后下次打开又不盖章,再打开可能的报错,这里先重置下印章索引
+                    IniFileHelper iniFileHelper = new IniFileHelper(strIniFilePath);
+                    string section = "config";
+                    iniFileHelper.WriteIniString(section, "yzIndex", yzIndex.ToString());
+                }
                 File.Create(yzLog).Close();
             }
             else
@@ -84,6 +196,7 @@ namespace PDFQFZ
                 sr.Close();
                 sr.Dispose();
             }
+            comboBoxYz.SelectedIndex = yzIndex;
             dt.Columns.Add("Name", typeof(string));
             dt.Columns.Add("Value", typeof(string));
             comboPDFlist.DisplayMember = "Name";
@@ -94,6 +207,13 @@ namespace PDFQFZ
             dtPos.Columns.Add("X", typeof(float));
             dtPos.Columns.Add("Y", typeof(float));
             isSaveSources.Enabled = false;
+            if(sourcePath != "")
+            {
+                wjType = 1;
+                comboType.SelectedIndex = wjType;
+                pathText.Text = sourcePath;
+                textBCpath.Text = outputPath;
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -105,6 +225,7 @@ namespace PDFQFZ
             qmType = comboQmtype.SelectedIndex;
             wzType = comboBoxWZ.SelectedIndex;
             qbflag = comboBoxQB.SelectedIndex;
+            yzIndex = comboBoxYz.SelectedIndex;
 
             if (qfzType == 1&& yzType == 0 && qmType == 0)
             {
@@ -152,6 +273,24 @@ namespace PDFQFZ
                     else
                     {
                         pdfGz();
+
+                        //自动保持最后一次盖章的配置信息到配置文件
+                        IniFileHelper iniFileHelper = new IniFileHelper(strIniFilePath);
+                        string section = "config";
+                        iniFileHelper.WriteIniString(section, "wjType", wjType.ToString());
+                        iniFileHelper.WriteIniString(section, "qfzType", qfzType.ToString());
+                        iniFileHelper.WriteIniString(section, "yzType", yzType.ToString());
+                        iniFileHelper.WriteIniString(section, "djType", djType.ToString());
+                        iniFileHelper.WriteIniString(section, "qmType", qmType.ToString());
+                        iniFileHelper.WriteIniString(section, "wzType", wzType.ToString());
+                        iniFileHelper.WriteIniString(section, "qbflag", qbflag.ToString());
+                        iniFileHelper.WriteIniString(section, "size", size.ToString());
+                        iniFileHelper.WriteIniString(section, "rotation", rotation.ToString());
+                        iniFileHelper.WriteIniString(section, "opacity", opacity.ToString());
+                        iniFileHelper.WriteIniString(section, "wz", wz.ToString());
+                        iniFileHelper.WriteIniString(section, "maxfgs", maxfgs.ToString());
+                        iniFileHelper.WriteIniString(section, "yzIndex", yzIndex.ToString());
+                        iniFileHelper.WriteIniString(section, "signText", signText);
                     }
                 }
                 else
@@ -1335,9 +1474,9 @@ namespace PDFQFZ
                 imgStartPage = 1;
                 imgPageCount = 1;
                 labelPage.Text = "1/1";
-                Bitmap bmp = new Bitmap(177, 250);
+                Bitmap bmp = new Bitmap(358, 500);
                 Graphics g = Graphics.FromImage(bmp);
-                g.FillRectangle(Brushes.White, new System.Drawing.Rectangle(0, 0, 177, 250));
+                g.FillRectangle(Brushes.White, new System.Drawing.Rectangle(0, 0, 358, 500));
                 g.Dispose();
                 pictureBox1.Image = bmp;
             }
@@ -1348,7 +1487,7 @@ namespace PDFQFZ
         {
             if (comboYz.SelectedIndex != 0 || comboQfz.SelectedIndex == 4)
             {
-                this.Size = new Size(fw + 267, fh);
+                this.Size = new Size(fw + 517, fh);
             }
             else
             {
@@ -1361,7 +1500,7 @@ namespace PDFQFZ
         {
             if (comboYz.SelectedIndex != 0 || comboQfz.SelectedIndex == 4)
             {
-                this.Size = new Size(fw + 267, fh);
+                this.Size = new Size(fw + 517, fh);
             }
             else
             {

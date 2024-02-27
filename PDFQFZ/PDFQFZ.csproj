@@ -70,6 +70,9 @@
   <PropertyGroup>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>PDFQFZ.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="O2S.Components.PDFRender4NET">
       <HintPath>D:\Downloads\O2S.Components.PDFRender4NET.dll</HintPath>
@@ -93,6 +96,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Library\IniFileHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="Resources\O2S.Components.PDFRender4NET.dll" />
