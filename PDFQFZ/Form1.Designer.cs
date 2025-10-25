@@ -77,9 +77,9 @@
             this.textpdfpass = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
             this.comboBoxPages = new System.Windows.Forms.ComboBox();
-            this.textDpi = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.checkMultiple = new System.Windows.Forms.CheckBox();
+            this.checkRandom = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -189,9 +189,8 @@
             this.log.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.log.Size = new System.Drawing.Size(441, 119);
             this.log.TabIndex = 10;
-            this.log.Text = "提示:建议使用300DPI的印章图片(如40mm的印章,对应的像素为472,计算公式为:40毫米 / 25.4毫米每英寸 * 300 DPI ≈ 472 像素)." +
-    "\r\nPDF文件常见的DPI有72/150/300,如果填写错误会导致盖出来的印章大小跟实际有差异.\r\n使用合并模式会导致文字不可编辑,并且原数字签名丢失.随意骑" +
-    "缝章和自定义加印章共用右边的预览定位,所以同时使用的时候会冲突,建议分开盖章.";
+            this.log.Text = "提示:建议使用472像素以上且背景透明的印章图片.\r\n使用合并模式会导致文字不可编辑,并且原数字签名丢失.随意骑缝章和自定义加印章共用右边的预览定位,所以同时使用" +
+    "的时候会冲突,建议分开盖章.";
             // 
             // comboYz
             // 
@@ -199,9 +198,9 @@
             this.comboYz.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.comboYz.FormattingEnabled = true;
             this.comboYz.Items.AddRange(new object[] {
-            "不加印章",
-            "尾页加印章",
-            "首页加印章",
+            "全都不加印章",
+            "首页不加印章",
+            "尾页不加印章",
             "所有页加印章",
             "自定义加印章"});
             this.comboYz.Location = new System.Drawing.Point(240, 12);
@@ -426,10 +425,11 @@
             // 
             // pictureBox2
             // 
+            this.pictureBox2.BackColor = System.Drawing.Color.Transparent;
             this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
             this.pictureBox2.Location = new System.Drawing.Point(790, 400);
             this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(60, 60);
+            this.pictureBox2.Size = new System.Drawing.Size(72, 72);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox2.TabIndex = 37;
             this.pictureBox2.TabStop = false;
@@ -450,7 +450,7 @@
             // textRotation
             // 
             this.textRotation.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.textRotation.Location = new System.Drawing.Point(273, 324);
+            this.textRotation.Location = new System.Drawing.Point(252, 290);
             this.textRotation.Name = "textRotation";
             this.textRotation.Size = new System.Drawing.Size(43, 26);
             this.textRotation.TabIndex = 39;
@@ -460,7 +460,7 @@
             // 
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label10.Location = new System.Drawing.Point(236, 327);
+            this.label10.Location = new System.Drawing.Point(215, 293);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(37, 20);
             this.label10.TabIndex = 38;
@@ -470,7 +470,7 @@
             // 
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label9.Location = new System.Drawing.Point(318, 326);
+            this.label9.Location = new System.Drawing.Point(297, 292);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(15, 20);
             this.label9.TabIndex = 40;
@@ -479,7 +479,7 @@
             // textOpacity
             // 
             this.textOpacity.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.textOpacity.Location = new System.Drawing.Point(337, 323);
+            this.textOpacity.Location = new System.Drawing.Point(335, 323);
             this.textOpacity.Name = "textOpacity";
             this.textOpacity.Size = new System.Drawing.Size(48, 26);
             this.textOpacity.TabIndex = 42;
@@ -489,7 +489,7 @@
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label12.Location = new System.Drawing.Point(391, 326);
+            this.label12.Location = new System.Drawing.Point(389, 326);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(63, 20);
             this.label12.TabIndex = 41;
@@ -608,25 +608,6 @@
             this.comboBoxPages.TabIndex = 53;
             this.comboBoxPages.SelectionChangeCommitted += new System.EventHandler(this.comboBoxPages_SelectionChangeCommitted);
             // 
-            // textDpi
-            // 
-            this.textDpi.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.textDpi.Location = new System.Drawing.Point(248, 289);
-            this.textDpi.Name = "textDpi";
-            this.textDpi.Size = new System.Drawing.Size(43, 26);
-            this.textDpi.TabIndex = 55;
-            this.textDpi.Text = "150";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label5.Location = new System.Drawing.Point(182, 292);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(64, 20);
-            this.label5.TabIndex = 54;
-            this.label5.Text = "PDF DPI";
-            // 
             // progressBar1
             // 
             this.progressBar1.Location = new System.Drawing.Point(97, 101);
@@ -635,15 +616,37 @@
             this.progressBar1.TabIndex = 56;
             this.progressBar1.Visible = false;
             // 
+            // checkMultiple
+            // 
+            this.checkMultiple.AutoSize = true;
+            this.checkMultiple.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.checkMultiple.Location = new System.Drawing.Point(370, 157);
+            this.checkMultiple.Name = "checkMultiple";
+            this.checkMultiple.Size = new System.Drawing.Size(84, 24);
+            this.checkMultiple.TabIndex = 57;
+            this.checkMultiple.Text = "多章连盖";
+            this.checkMultiple.UseVisualStyleBackColor = true;
+            // 
+            // checkRandom
+            // 
+            this.checkRandom.AutoSize = true;
+            this.checkRandom.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.checkRandom.Location = new System.Drawing.Point(245, 325);
+            this.checkRandom.Name = "checkRandom";
+            this.checkRandom.Size = new System.Drawing.Size(84, 24);
+            this.checkRandom.TabIndex = 58;
+            this.checkRandom.Text = "随机参数";
+            this.checkRandom.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(467, 561);
+            this.Controls.Add(this.checkRandom);
+            this.Controls.Add(this.checkMultiple);
             this.Controls.Add(this.progressBar1);
-            this.Controls.Add(this.textDpi);
-            this.Controls.Add(this.label5);
             this.Controls.Add(this.comboBoxPages);
             this.Controls.Add(this.textpdfpass);
             this.Controls.Add(this.label15);
@@ -696,7 +699,7 @@
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.Name = "Form1";
-            this.Text = "PDF加盖骑缝章(V1.28)";
+            this.Text = "PDF加盖骑缝章(V1.31)";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -755,9 +758,9 @@
         private System.Windows.Forms.TextBox textpdfpass;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.ComboBox comboBoxPages;
-        private System.Windows.Forms.TextBox textDpi;
-        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.CheckBox checkMultiple;
+        private System.Windows.Forms.CheckBox checkRandom;
     }
 }
 
